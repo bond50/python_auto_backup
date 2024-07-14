@@ -1,0 +1,9 @@
+CREATE USER backup_user WITH PASSWORD 'your_secure_password';
+
+GRANT CONNECT ON DATABASE your_database TO backup_user;
+GRANT USAGE ON SCHEMA public TO backup_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO backup_user;
+ALTER ROLE backup_user WITH SUPERUSER;
+
+
