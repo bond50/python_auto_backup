@@ -1,17 +1,21 @@
 #!/bin/bash
 
 # Variables
-BACKUP_DIR="/home/user/daily_backup"
+BACKUP_DIR="/path/to/backup/dir"
 DATE=$(date +%Y-%m-%d_%H-%M-%S)
-BACKUP_NAME="backup_$DATE"
-DB_USER="backup_user_name"
+BACKUP_TYPE=$1
+BACKUP_NAME="backup_${DATE}-${BACKUP_TYPE}"
+BACKUP_TAR="${BACKUP_NAME}.tar.gz"
+DB_USER="backup_user"
 DB_PASSWORD="password"
-
-
-
-
 DB_HOST="localhost"
-SKIP_DBS="dummy2|dummy3"
+SKIP_DBS="dummy1|dummy2"
+
+# Ensure backup type is specified
+if [ -z "$BACKUP_TYPE" ]; then
+    echo "Error: No backup type specified. Use 'daily', 'weekly', or 'monthly'."
+    exit 1
+fi
 
 # Create backup directory if it does not exist
 mkdir -p $BACKUP_DIR/$BACKUP_NAME
@@ -46,7 +50,7 @@ done
 
 # Compress the backup directory
 echo "Compressing backup directory..."
-tar -czf $BACKUP_DIR/$BACKUP_NAME.tar.gz -C $BACKUP_DIR $BACKUP_NAME
+tar -czf $BACKUP_DIR/$BACKUP_TAR -C $BACKUP_DIR $BACKUP_NAME
 log_and_exit_on_error "Failed to compress backup directory."
 
 # Delete the uncompressed backup directory
@@ -54,10 +58,10 @@ echo "Deleting uncompressed backup directory..."
 rm -rf $BACKUP_DIR/$BACKUP_NAME
 log_and_exit_on_error "Failed to delete uncompressed backup directory."
 
-# Delete old compressed backups, keeping only the latest 7
-cd $BACKUP_DIR
-ls -t *.tar.gz | awk 'NR>7' | xargs rm -f
+# Delete backups older than 1 year
+echo "Deleting backups older than 1 year..."
+find $BACKUP_DIR -name "chis_*.tar.gz" -type f -mtime +365 -exec rm -f {} \;
 log_and_exit_on_error "Failed to delete old backups."
 
-echo "Backup created: $BACKUP_DIR/$BACKUP_NAME.tar.gz"
+echo "Backup created: $BACKUP_DIR/$BACKUP_TAR"
 
